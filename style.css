@@ -1,0 +1,99 @@
+body {
+  background-color: rgb(31, 28, 34);
+}
+.game-title {
+  color: white;
+  font-size: 2.5rem;
+  margin-bottom: 20px;
+}
+.game-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  padding: 20px;
+}
+.cards-grid {
+  background-color: #7e818f;
+  padding: 40px;
+  border-radius: 25px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 15px;
+  margin-top: 20px;
+  max-width: 70%;
+}
+.card {
+  transition: transform 0.3s ease;
+}
+.card:hover {
+  transform: scale(1.03);
+}
+.card-front {
+  display: none;
+}
+.card-front img,
+.card-back img {
+  border-radius: 5px;
+  width: 100px;
+  height: 150px;
+}
+
+.card.flipped .card-back {
+  display: none;
+}
+
+.card.card.flipped .card-front {
+  display: block;
+}
+
+.nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+}
+.btn {
+  background-color: #0ee215;
+  cursor: pointer;
+  text-align: center;
+  padding: 8px 15px;
+  border-radius: 10px;
+  font-size: 15px;
+  border: 2px solid #0ee215;
+  transition: transform 0.3s ease;
+}
+.btn:hover {
+  transform: translateY(-5px);
+}
+.moves span {
+  color: white;
+}
+.moves {
+  display: flex;
+  align-items: center;
+  gap: 100px;
+}
+.modal {
+  display: none;
+}
+.modal-content {
+  background-color: #ffffff;
+  padding: 40px;
+  border-radius: 25px;
+  text-align: center;
+  width: 30%;
+  margin: 0 auto;
+}
+.modal-buttons {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 40px;
+}
+.modal-overlay {
+  position: absolute;
+  inset: 0; /* top:0; right:0; bottom:0; left:0; */
+  background: rgba(41, 41, 41, 0.6);
+}

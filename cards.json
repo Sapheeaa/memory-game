@@ -1,0 +1,10 @@
+[
+  { "id": 1, "image": "left4dead.jpg", "name": "left4dead" },
+  { "id": 2, "image": "cuberpunk2077.jpg", "name": "cuberpunk2077" },
+  { "id": 3, "image": "phasmophobia.jpg", "name": "phasmophobia" },
+  { "id": 4, "image": "residentEvel.jpg", "name": "residentEvelyn" },
+  { "id": 5, "image": "terraria.jpg", "name": "terraria" },
+  { "id": 6, "image": "theLastOfUs.jpg", "name": "theLastOfUs" },
+  { "id": 7, "image": "unravelTwo.jpg", "name": "unravelTwo" },
+  { "id": 8, "image": "untilDawn.jpg", "name": "untilDawn" }
+]
