@@ -47,13 +47,8 @@ const pairsСount = document.createElement("span");
 pairsСount.id = "pairs-count";
 pairsСount.textContent = "0 / 8";
 
-const resetBtn = document.createElement("button");
-resetBtn.classList.add("btn", "btn-reset");
-resetBtn.textContent = "Reset";
-
 movesElement.appendChild(movesСount);
 movesElement.appendChild(pairsСount);
-movesElement.appendChild(resetBtn);
 
 mainElement.appendChild(movesElement);
 
@@ -63,6 +58,117 @@ document.body.appendChild(mainElement);
 const cardsGrid = document.createElement("div");
 cardsGrid.classList.add("cards-grid");
 mainElement.appendChild(cardsGrid);
+
+// --- МОДАЛЬНОЕ ОКНО ---
+const modal = document.createElement("div");
+modal.classList.add("modal");
+
+const modalOverlay = document.createElement("div");
+modalOverlay.classList.add("modal-overlay");
+modalOverlay.id = "win-modal";
+
+const modalContent = document.createElement("div");
+modalContent.classList.add("modal-content");
+//текст
+const modalTitle = document.createElement("h2");
+modalTitle.textContent = "Congratulations!";
+const modalText = document.createElement("p");
+modalText.textContent = "You matched all pairs! In which game have you already played?";
+//кнопки
+const modalButtons = document.createElement("div");
+modalButtons.classList.add("modal-buttons");
+
+const finalMovesCount = document.createElement("span");
+finalMovesCount.id = "final-moves-count";
+finalMovesCount.textContent = "0";
+
+// 8. Кнопка Restart
+const modalNewGameBtn = document.createElement("button");
+modalNewGameBtn.classList.add("btn", "btn-reset");
+modalNewGameBtn.id = "modalNewGameBtn";
+
+// 9. Кнопка Close
+const modalCloseGameBtn = document.createElement("button");
+modalCloseGameBtn.classList.add("btn", "btn-close");
+modalCloseGameBtn.id = "modalCloseGameBtn";
+modalCloseGameBtn.textContent = "Close";
+
+//собираем модальное окно
+modalButtons.appendChild(finalMovesCount);
+modalButtons.appendChild(modalNewGameBtn);
+modalButtons.appendChild(modalCloseGameBtn);
+
+modalContent.appendChild(modalTitle);
+modalContent.appendChild(modalText);
+modalContent.appendChild(modalButtons);
+
+modalOverlay.appendChild(modalContent);
+modal.appendChild(modalOverlay);
+
+document.body.appendChild(modal);
+
+function openModal() {
+  modal.classList.add("modal-open");
+  finalMovesCount.textContent = `${moves} steps`;
+  document.body.style.overflow = "hidden"; //блокирует прокрутку страницы
+}
+
+function closeModal() {
+  modal.classList.remove("modal-open");
+  document.body.style.overflow = "";
+}
+document.addEventListener("keydown", function (event) {
+  if (event.key === "Escape" && modal.classList.contains("modal-open")) {
+    closeModal();
+  }
+});
+
+modalCloseGameBtn.addEventListener("click", closeModal);
+//
+
+let firstCard = null;
+let secondCard = null;
+let moves = 0;
+let matchedPairs = 0;
+let hasFlippedCard = false;
+let lockBoard = false;
+
+function isMatch() {
+  if (firstCard.dataset.id === secondCard.dataset.id) {
+    match();
+  } else {
+    unmatch();
+  }
+}
+function match() {
+  hasFlippedCard = false;
+  lockBoard = false;
+  firstCard = null;
+  secondCard = null;
+  matchedPairs++;
+  moves++;
+  movesСount.textContent = `${moves}`;
+  pairsСount.textContent = `${matchedPairs} / 8`;
+  if (matchedPairs === 8) {
+    setTimeout(function () {
+      openModal();
+    }, 500);
+  }
+}
+function unmatch() {
+  lockBoard = true;
+  //устанавливаем таймер блокировки
+  setTimeout(function () {
+    firstCard.classList.remove("flipped");
+    secondCard.classList.remove("flipped");
+    hasFlippedCard = false;
+    lockBoard = false;
+    firstCard = null;
+    secondCard = null;
+    moves++;
+    movesСount.textContent = `${moves}`;
+  }, 700);
+}
 
 // генерируем карточки.
 fetch("cards.json")
@@ -79,7 +185,7 @@ fetch("cards.json")
     ShuffledData.forEach(function (cardData) {
       const cardElement = document.createElement("div");
       cardElement.classList.add("card"); //Создаем основу карточки
-
+      cardElement.dataset.id = cardData.id;
       const cardFront = document.createElement("div"); //Создаем лицевую сторону (картинка игры)
       cardFront.classList.add("card-front");
 
@@ -105,60 +211,23 @@ fetch("cards.json")
       cardsGrid.appendChild(cardElement);
 
       cardElement.addEventListener("click", function () {
-        cardElement.classList.toggle("flipped");
+        if (lockBoard) return; //если доска заблокирована ничего не делаем (по умолчанию false)
+        if (cardElement.classList.contains("flipped")) return; // если карточка уже открыта, ничего не делаем
+        //
+        cardElement.classList.toggle("flipped"); //во всех других случаях переворачиваем карту
+        if (hasFlippedCard === false) {
+          //если карта еще не была перевернута, присваеваем переменной перевернутость
+          hasFlippedCard = true; //отныне она перевернута
+          firstCard = cardElement;
+          return;
+        }
+        secondCard = cardElement;
+        isMatch();
+
+        ///
       });
     });
   })
   .catch(function (error) {
     console.error("Ошибка при загрузке cards.json:", error);
   });
-
-// --- МОДАЛЬНОЕ ОКНО ---
-const modal = document.createElement("div");
-modal.classList.add("modal");
-
-const modalOverlay = document.createElement("div");
-modalOverlay.classList.add("modal-overlay");
-modalOverlay.id = "win-modal";
-modalOverlay.style.display = "none";
-
-const modalContent = document.createElement("div");
-modalContent.classList.add("modal-content");
-//текст
-const modalTitle = document.createElement("h2");
-modalTitle.textContent = "Congratulations!";
-const modalText = document.createElement("p");
-modalText.textContent = "You matched all pairs! in which one have you already played?";
-//кнопки
-const modalButtons = document.createElement("div");
-modalButtons.classList.add("modal-buttons");
-
-const finalMovesCount = document.createElement("span");
-finalMovesCount.id = "final-moves-count";
-finalMovesCount.textContent = "0";
-
-// 8. Кнопка Restart
-const modalNewGameBtn = document.createElement("button");
-modalNewGameBtn.classList.add("btn", "btn-reset");
-modalNewGameBtn.id = "modalNewGameBtn";
-modalNewGameBtn.textContent = "Restart";
-
-// 9. Кнопка Close
-const modalCloseGameBtn = document.createElement("button");
-modalCloseGameBtn.classList.add("btn", "btn-close");
-modalCloseGameBtn.id = "modalCloseGameBtn";
-modalCloseGameBtn.textContent = "Close";
-
-//собираем модальное окно
-modalButtons.appendChild(finalMovesCount);
-modalButtons.appendChild(modalNewGameBtn);
-modalButtons.appendChild(modalCloseGameBtn);
-
-modalContent.appendChild(modalTitle);
-modalContent.appendChild(modalText);
-modalContent.appendChild(modalButtons);
-
-modalOverlay.appendChild(modalContent);
-modal.appendChild(modalOverlay);
-
-document.body.appendChild(modal);
