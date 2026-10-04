@@ -86,6 +86,7 @@ finalMovesCount.textContent = "0";
 const modalNewGameBtn = document.createElement("button");
 modalNewGameBtn.classList.add("btn", "btn-reset");
 modalNewGameBtn.id = "modalNewGameBtn";
+modalNewGameBtn.textContent = "restart";
 
 // 9. Кнопка Close
 const modalCloseGameBtn = document.createElement("button");
@@ -124,7 +125,28 @@ document.addEventListener("keydown", function (event) {
 });
 
 modalCloseGameBtn.addEventListener("click", closeModal);
-//
+
+let unmatchTimer = null;
+let globalCardsData = [];
+
+function resetGame() {
+  if (unmatchTimer) {
+    clearTimeout(unmatchTimer);
+    unmatchTimer = null;
+  }
+
+  firstCard = null;
+  secondCard = null;
+  moves = 0;
+  matchedPairs = 0;
+  hasFlippedCard = false;
+  lockBoard = false;
+
+  movesСount.textContent = moves;
+  pairsСount.textContent = `${matchedPairs} / 8`;
+  closeModal(); //если кнопка нажата после победы
+  initGame();
+}
 
 let firstCard = null;
 let secondCard = null;
@@ -170,64 +192,75 @@ function unmatch() {
   }, 700);
 }
 
-// генерируем карточки.
+function initGame() {
+  while (cardsGrid.firstChild) {
+    cardsGrid.removeChild(cardsGrid.firstChild);
+  }
+  const duplicatedData = globalCardsData.concat(globalCardsData); //дублируем массив и объединяем, чтобы было 16 карточек
+  console.log(duplicatedData);
+  const ShuffledData = duplicatedData.sort(function () {
+    return Math.random() - 0.5; //перемешиваем
+  });
+  //заполняем карточки
+  ShuffledData.forEach(function (cardData) {
+    const cardElement = document.createElement("div");
+    cardElement.classList.add("card"); //Создаем основу карточки
+    cardElement.dataset.id = cardData.id;
+    const cardFront = document.createElement("div"); //Создаем лицевую сторону (картинка игры)
+    cardFront.classList.add("card-front");
+
+    const frontImage = document.createElement("img");
+    frontImage.src = cardData.image;
+    frontImage.alt = cardData.name;
+    cardFront.appendChild(frontImage);
+    //Создаем обратную сторону (рубашка с динозавром)
+
+    const cardBack = document.createElement("div");
+    cardBack.classList.add("card-back");
+
+    const backImage = document.createElement("img");
+    backImage.src = "dino.jpg";
+    backImage.alt = "dino";
+
+    cardBack.appendChild(backImage);
+    //Собираем карточку воедино
+    cardElement.appendChild(cardFront);
+    cardElement.appendChild(cardBack);
+
+    //вкладываем в сетку грид
+    cardsGrid.appendChild(cardElement);
+
+    cardElement.addEventListener("click", function () {
+      if (lockBoard) return; //если доска заблокирована ничего не делаем (по умолчанию false)
+      if (cardElement.classList.contains("flipped")) return; // если карточка уже открыта, ничего не делаем
+      //
+      cardElement.classList.toggle("flipped"); //во всех других случаях переворачиваем карту
+      if (hasFlippedCard === false) {
+        //если карта еще не была перевернута, присваеваем переменной перевернутость
+        hasFlippedCard = true; //отныне она перевернута
+        firstCard = cardElement;
+        return;
+      }
+      secondCard = cardElement;
+      isMatch();
+
+      ///
+    });
+  });
+}
+// Загружаем данные и запускаем игру первый раз
 fetch("cards.json")
   .then(function (response) {
     return response.json();
   })
   .then(function (data) {
-    const duplicatedData = data.concat(data); //дублируем массив и объединяем, чтобы было 16 карточек
-    console.log(duplicatedData);
-    const ShuffledData = duplicatedData.sort(function () {
-      return Math.random() - 0.5; //перемешиваем
-    });
-    //заполняем карточки
-    ShuffledData.forEach(function (cardData) {
-      const cardElement = document.createElement("div");
-      cardElement.classList.add("card"); //Создаем основу карточки
-      cardElement.dataset.id = cardData.id;
-      const cardFront = document.createElement("div"); //Создаем лицевую сторону (картинка игры)
-      cardFront.classList.add("card-front");
-
-      const frontImage = document.createElement("img");
-      frontImage.src = cardData.image;
-      frontImage.alt = cardData.name;
-      cardFront.appendChild(frontImage);
-      //Создаем обратную сторону (рубашка с динозавром)
-
-      const cardBack = document.createElement("div");
-      cardBack.classList.add("card-back");
-
-      const backImage = document.createElement("img");
-      backImage.src = "dino.jpg";
-      backImage.alt = "dino";
-
-      cardBack.appendChild(backImage);
-      //Собираем карточку воедино
-      cardElement.appendChild(cardFront);
-      cardElement.appendChild(cardBack);
-
-      //вкладываем в сетку грид
-      cardsGrid.appendChild(cardElement);
-
-      cardElement.addEventListener("click", function () {
-        if (lockBoard) return; //если доска заблокирована ничего не делаем (по умолчанию false)
-        if (cardElement.classList.contains("flipped")) return; // если карточка уже открыта, ничего не делаем
-        //
-        cardElement.classList.toggle("flipped"); //во всех других случаях переворачиваем карту
-        if (hasFlippedCard === false) {
-          //если карта еще не была перевернута, присваеваем переменной перевернутость
-          hasFlippedCard = true; //отныне она перевернута
-          firstCard = cardElement;
-          return;
-        }
-        secondCard = cardElement;
-        isMatch();
-
-        ///
-      });
-    });
+    globalCardsData = data;
+    initGame();
   })
   .catch(function (error) {
     console.error("Ошибка при загрузке cards.json:", error);
   });
+
+// Привязываем функцию сброса к обеим кнопкам «New Game»
+newGameBtn.addEventListener("click", resetGame);
+modalNewGameBtn.addEventListener("click", resetGame);
