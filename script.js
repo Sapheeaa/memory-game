@@ -58,65 +58,33 @@ const cardsGrid = document.createElement("div");
 cardsGrid.classList.add("cards-grid");
 mainElement.appendChild(cardsGrid);
 
-// --- МОДАЛЬНОЕ ОКНО ---
-const modal = document.createElement("div");
-modal.classList.add("modal");
+// --- МОДАЛЬНОЕ ОКНО ---//
+function createModalSkeleton() {
+  const modal = document.createElement("div");
+  modal.classList.add("modal");
 
-const modalOverlay = document.createElement("div");
-modalOverlay.classList.add("modal-overlay");
-modalOverlay.id = "win-modal";
-
-const modalContent = document.createElement("div");
-modalContent.classList.add("modal-content");
-//текст
-const modalTitle = document.createElement("h2");
-modalTitle.textContent = "Congratulations!";
-const modalText = document.createElement("p");
-modalText.textContent = "You matched all pairs! In which game have you already played?";
-//кнопки
-const modalButtons = document.createElement("div");
-modalButtons.classList.add("modal-buttons");
-
-const finalMovesCount = document.createElement("span");
-finalMovesCount.id = "final-moves-count";
-finalMovesCount.textContent = "0";
-
-// 8. Кнопка Restart
-const modalNewGameBtn = document.createElement("button");
-modalNewGameBtn.classList.add("btn", "btn-reset");
-modalNewGameBtn.id = "modalNewGameBtn";
-modalNewGameBtn.textContent = "restart";
-
-// 9. Кнопка Close
-const modalCloseGameBtn = document.createElement("button");
-modalCloseGameBtn.classList.add("btn", "btn-close");
-modalCloseGameBtn.id = "modalCloseGameBtn";
-modalCloseGameBtn.textContent = "Close";
-
-//собираем модальное окно
-modalButtons.appendChild(finalMovesCount);
-modalButtons.appendChild(modalNewGameBtn);
-modalButtons.appendChild(modalCloseGameBtn);
-
-modalContent.appendChild(modalTitle);
-modalContent.appendChild(modalText);
-modalContent.appendChild(modalButtons);
-
-modalOverlay.appendChild(modalContent);
-modal.appendChild(modalOverlay);
-
-document.body.appendChild(modal);
-
-function openModal() {
-  modal.classList.add("modal-open");
-  finalMovesCount.textContent = `${moves} steps`;
-  document.body.style.overflow = "hidden"; //блокирует прокрутку страницы
+  const modalContent = document.createElement("div");
+  modalContent.classList.add("modal-content");
+  modal.appendChild(modalContent);
+  return { modalElement: modal, contentContainer: modalContent };
 }
 
-function closeModal() {
-  modal.classList.remove("modal-open");
+function openModal(modalObj, renderContent) {
+  while (modalObj.contentContainer.firstChild) {
+    modalObj.contentContainer.removeChild(modalObj.contentContainer.firstChild);
+  }
+  if (renderContent) {
+    renderContent(modalObj.contentContainer);
+  }
+  modalObj.modalElement.classList.add("modal-open");
+  document.style.overflow = "hidden";
+}
+
+function closeModal(modalObj) {
+  modalObj.modalElement.classList.remove("modal-open");
   document.body.style.overflow = "";
 }
+
 document.addEventListener("keydown", function (event) {
   if (event.key === "Escape" && modal.classList.contains("modal-open")) {
     closeModal();
