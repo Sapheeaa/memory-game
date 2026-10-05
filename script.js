@@ -1,5 +1,4 @@
 // хедер//
-//1. Создаем главный тег <header>
 const headerElement = document.createElement("header");
 
 // 2. Создаем контейнер для навигации <div class="nav">
