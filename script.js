@@ -1,37 +1,29 @@
-// хедер//
+// --- ХЕДЕР --- //
 const headerElement = document.createElement("header");
 
-// 2. Создаем контейнер для навигации <div class="nav">
 const navElements = document.createElement("nav");
 navElements.classList.add("nav");
 
-// 3. Создаем кнопку "New Game"
 const newGameBtn = document.createElement("button");
 newGameBtn.classList.add("btn-new-game", "btn");
 newGameBtn.textContent = "New Game";
 
-// 4. Создаем заголовок <h1 class="game-title">
 const titleElement = document.createElement("h1");
 titleElement.classList.add("game-title");
 titleElement.textContent = "Memory Game";
 
-// 5. Создаем кнопку "Leaders"
 const lidersBtn = document.createElement("button");
 lidersBtn.classList.add("btn", "btn-leaders");
 lidersBtn.textContent = "Liders";
 
-// 6. Собираем структуру: вкладываем кнопки и заголовок внутрь .nav
 navElements.appendChild(newGameBtn);
 navElements.appendChild(titleElement);
 navElements.appendChild(lidersBtn);
 
-// 7. Вкладываем .nav внутрь <header>
 headerElement.appendChild(navElements);
-
-// 8. Добавляем готовый header на страницу в тег <body>
 document.body.prepend(headerElement);
 
-// счетчики//
+// --- СЧЕТЧИКИ И СЕТКА --- //
 const mainElement = document.createElement("main");
 mainElement.classList.add("game-container");
 
@@ -48,42 +40,64 @@ pairsСount.textContent = "0 / 8";
 
 movesElement.appendChild(movesСount);
 movesElement.appendChild(pairsСount);
-
 mainElement.appendChild(movesElement);
 
-document.body.appendChild(mainElement);
-
-// сеточка грид//
 const cardsGrid = document.createElement("div");
 cardsGrid.classList.add("cards-grid");
 mainElement.appendChild(cardsGrid);
 
-// --- МОДАЛЬНОЕ ОКНО ---//
-function createModalSkeleton() {
-  const modal = document.createElement("div");
-  modal.classList.add("modal");
+document.body.appendChild(mainElement);
 
-  const modalContent = document.createElement("div");
-  modalContent.classList.add("modal-content");
-  modal.appendChild(modalContent);
-  return { modalElement: modal, contentContainer: modalContent };
+// --- ПРОСТОЕ МОДАЛЬНОЕ ОКНО --- //
+const modal = document.createElement("div");
+modal.classList.add("modal");
+
+const modalOverlay = document.createElement("div");
+modalOverlay.classList.add("modal-overlay");
+
+const modalContent = document.createElement("div");
+modalContent.classList.add("modal-content");
+
+const modalTitle = document.createElement("h2");
+modalTitle.textContent = "Congratulations!";
+
+const modalText = document.createElement("p");
+modalText.id = "modal-text";
+
+const modalButtons = document.createElement("div");
+modalButtons.classList.add("modal-buttons");
+
+const modalNewGameBtn = document.createElement("button");
+modalNewGameBtn.classList.add("btn", "btn-reset");
+modalNewGameBtn.textContent = "Restart";
+
+const modalCloseGameBtn = document.createElement("button");
+modalCloseGameBtn.classList.add("btn", "btn-close");
+modalCloseGameBtn.textContent = "Close";
+
+modalButtons.appendChild(modalNewGameBtn);
+modalButtons.appendChild(modalCloseGameBtn);
+
+modalContent.appendChild(modalTitle);
+modalContent.appendChild(modalText);
+modalContent.appendChild(modalButtons);
+
+modalOverlay.appendChild(modalContent);
+modal.appendChild(modalOverlay);
+document.body.appendChild(modal);
+
+function openModal() {
+  modalText.textContent = `You matched all pairs in ${moves} moves!`;
+  modal.classList.add("modal-open");
+  document.body.style.overflow = "hidden"; // Исправлено (добавлен .body)
 }
 
-function openModal(modalObj, renderContent) {
-  while (modalObj.contentContainer.firstChild) {
-    modalObj.contentContainer.removeChild(modalObj.contentContainer.firstChild);
-  }
-  if (renderContent) {
-    renderContent(modalObj.contentContainer);
-  }
-  modalObj.modalElement.classList.add("modal-open");
-  document.style.overflow = "hidden";
-}
-
-function closeModal(modalObj) {
-  modalObj.modalElement.classList.remove("modal-open");
+function closeModal() {
+  modal.classList.remove("modal-open");
   document.body.style.overflow = "";
 }
+
+modalCloseGameBtn.addEventListener("click", closeModal);
 
 document.addEventListener("keydown", function (event) {
   if (event.key === "Escape" && modal.classList.contains("modal-open")) {
@@ -91,10 +105,16 @@ document.addEventListener("keydown", function (event) {
   }
 });
 
-modalCloseGameBtn.addEventListener("click", closeModal);
-
+// --- ИГРОВАЯ ЛОГИКА --- //
 let unmatchTimer = null;
 let globalCardsData = [];
+
+let firstCard = null;
+let secondCard = null;
+let moves = 0;
+let matchedPairs = 0;
+let hasFlippedCard = false;
+let lockBoard = false;
 
 function resetGame() {
   if (unmatchTimer) {
@@ -111,16 +131,9 @@ function resetGame() {
 
   movesСount.textContent = moves;
   pairsСount.textContent = `${matchedPairs} / 8`;
-  closeModal(); //если кнопка нажата после победы
+  closeModal();
   initGame();
 }
-
-let firstCard = null;
-let secondCard = null;
-let moves = 0;
-let matchedPairs = 0;
-let hasFlippedCard = false;
-let lockBoard = false;
 
 function isMatch() {
   if (firstCard.dataset.id === secondCard.dataset.id) {
@@ -129,6 +142,7 @@ function isMatch() {
     unmatch();
   }
 }
+
 function match() {
   hasFlippedCard = false;
   lockBoard = false;
@@ -144,10 +158,10 @@ function match() {
     }, 500);
   }
 }
+
 function unmatch() {
   lockBoard = true;
-  //устанавливаем таймер блокировки
-  setTimeout(function () {
+  unmatchTimer = setTimeout(function () {
     firstCard.classList.remove("flipped");
     secondCard.classList.remove("flipped");
     hasFlippedCard = false;
@@ -156,6 +170,7 @@ function unmatch() {
     secondCard = null;
     moves++;
     movesСount.textContent = `${moves}`;
+    unmatchTimer = null;
   }, 700);
 }
 
@@ -163,24 +178,23 @@ function initGame() {
   while (cardsGrid.firstChild) {
     cardsGrid.removeChild(cardsGrid.firstChild);
   }
-  const duplicatedData = globalCardsData.concat(globalCardsData); //дублируем массив и объединяем, чтобы было 16 карточек
-  console.log(duplicatedData);
+  const duplicatedData = globalCardsData.concat(globalCardsData);
   const ShuffledData = duplicatedData.sort(function () {
-    return Math.random() - 0.5; //перемешиваем
+    return Math.random() - 0.5;
   });
-  //заполняем карточки
+
   ShuffledData.forEach(function (cardData) {
     const cardElement = document.createElement("div");
-    cardElement.classList.add("card"); //Создаем основу карточки
+    cardElement.classList.add("card");
     cardElement.dataset.id = cardData.id;
-    const cardFront = document.createElement("div"); //Создаем лицевую сторону (картинка игры)
+
+    const cardFront = document.createElement("div");
     cardFront.classList.add("card-front");
 
     const frontImage = document.createElement("img");
     frontImage.src = cardData.image;
     frontImage.alt = cardData.name;
     cardFront.appendChild(frontImage);
-    //Создаем обратную сторону (рубашка с динозавром)
 
     const cardBack = document.createElement("div");
     cardBack.classList.add("card-back");
@@ -188,33 +202,30 @@ function initGame() {
     const backImage = document.createElement("img");
     backImage.src = "dino.jpg";
     backImage.alt = "dino";
-
     cardBack.appendChild(backImage);
-    //Собираем карточку воедино
+
     cardElement.appendChild(cardFront);
     cardElement.appendChild(cardBack);
-
-    //вкладываем в сетку грид
     cardsGrid.appendChild(cardElement);
 
     cardElement.addEventListener("click", function () {
-      if (lockBoard) return; //если доска заблокирована ничего не делаем (по умолчанию false)
-      if (cardElement.classList.contains("flipped")) return; // если карточка уже открыта, ничего не делаем
-      //
-      cardElement.classList.toggle("flipped"); //во всех других случаях переворачиваем карту
+      if (lockBoard) return;
+      if (cardElement.classList.contains("flipped")) return;
+
+      cardElement.classList.toggle("flipped");
+
       if (hasFlippedCard === false) {
-        //если карта еще не была перевернута, присваеваем переменной перевернутость
-        hasFlippedCard = true; //отныне она перевернута
+        hasFlippedCard = true;
         firstCard = cardElement;
         return;
       }
+
       secondCard = cardElement;
       isMatch();
-
-      ///
     });
   });
 }
+
 // Загружаем данные и запускаем игру первый раз
 fetch("cards.json")
   .then(function (response) {
@@ -228,6 +239,6 @@ fetch("cards.json")
     console.error("Ошибка при загрузке cards.json:", error);
   });
 
-// Привязываем функцию сброса к обеим кнопкам «New Game»
+// Привязываем кнопки рестарта
 newGameBtn.addEventListener("click", resetGame);
 modalNewGameBtn.addEventListener("click", resetGame);
