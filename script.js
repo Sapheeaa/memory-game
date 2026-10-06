@@ -48,7 +48,7 @@ mainElement.appendChild(cardsGrid);
 
 document.body.appendChild(mainElement);
 
-// --- ПРОСТОЕ МОДАЛЬНОЕ ОКНО --- //
+// --- МОДАЛЬНОЕ ОКНО --- //
 const modal = document.createElement("div");
 modal.classList.add("modal");
 
@@ -61,6 +61,8 @@ modalContent.classList.add("modal-content");
 const modalTitle = document.createElement("h2");
 modalTitle.textContent = "Congratulations!";
 
+const modalQuestionText = document.createElement("p");
+modalQuestionText.textContent = "Which of these games would you play?";
 const modalText = document.createElement("p");
 modalText.id = "modal-text";
 
@@ -79,17 +81,18 @@ modalButtons.appendChild(modalNewGameBtn);
 modalButtons.appendChild(modalCloseGameBtn);
 
 modalContent.appendChild(modalTitle);
+modalContent.appendChild(modalQuestionText);
 modalContent.appendChild(modalText);
 modalContent.appendChild(modalButtons);
 
-modalOverlay.appendChild(modalContent);
+modal.appendChild(modalContent);
 modal.appendChild(modalOverlay);
 document.body.appendChild(modal);
 
 function openModal() {
   modalText.textContent = `You matched all pairs in ${moves} moves!`;
   modal.classList.add("modal-open");
-  document.body.style.overflow = "hidden"; // Исправлено (добавлен .body)
+  document.body.style.overflow = "hidden";
 }
 
 function closeModal() {
